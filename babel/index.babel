@@ -1,0 +1,100 @@
+
+class Wiki extends React.Component {
+  constructor(props){
+    super(props);
+    this.state = {
+      results:[],
+      refresh:false
+    };
+  };
+  handleClick(){
+    var _this=this;
+    let data=_this.refs.search.value;
+    _this.state.refresh=false;
+    _this.setState(_this.state);
+    let url="https://api.github.com/search/users?q="+data+"&sort=followers&order=desc";
+   
+    $.ajax( {
+     type: "GET",
+        url: url,
+        contentType: "application/json; charset=utf-8",
+        async: true,
+        dataType: "json",
+        success: function (data, textStatus, jqXHR) {
+            _this.state.results=data.items;
+          _this.state.refresh=true;
+          setTimeout(function() { _this.setState(_this.state); }.bind(_this), 500);
+          
+        },
+        error: function (errorMessage) {
+        }
+} );
+  }
+  
+  render(){
+    var _this=this;
+    let res;
+    
+    if(_this.state.results && _this.state.refresh ){
+    res= <List data={_this.state.results}/>;
+    }
+    else
+      res=[];
+    return(
+      <div className="container">
+      <div className ="section center">
+      <h1>Github Search</h1>
+      </div>
+      <div className ="section">
+      <div className="input-field col l6 m12 s12 center">
+      <i className="material-icons prefix">search</i>
+       <input id="search" type="text" class="validate" ref="search" onChange={_this.handleClick.bind(_this)}/>
+          <label for="search">Enter User Name</label>
+          
+      </div>
+      <div className="section">
+        {res}
+        </div>
+      </div>
+      </div>
+    );
+  }
+}
+class List extends React.Component{
+  constructor(props){
+    super(props);
+    this.state={
+      results:[]
+    }
+  }
+  componentDidMount(){
+    var _this=this;
+    let list=_this.props.data;
+    //alert(JSON.stringify(_this.props.data).length);
+    for(var k in list )
+     {
+       _this.state.results.push(list[k]);
+     
+     }
+     _this.setState(_this.state);
+  }
+  render(){
+    var _this =this;
+    return(
+     <div className="collection">
+      {_this.state.results.map(function(result,i){
+      let image;
+      if(result.avatar_url){
+        image=<img src={result.avatar_url} alt="" className="circle" />;
+      }
+      return ( <a href={result.html_url} className="collection-item avatar" key={i} target="_blank">
+              {image}
+      <span className="title">{result.login}</span>
+      </a>
+      );
+    },_this)}
+      </div>
+    );
+  }
+}
+React.render(<Wiki />, document.body);
